@@ -75,14 +75,6 @@ auto make_qemu_process(const mp::ConfinementSystem* confinement_system, const mp
     return process;
 }
 
-void remove_tap_device(const QString& tap_device_name)
-{
-    if (mp::utils::run_cmd_for_status("ip", {"addr", "show", tap_device_name}))
-    {
-        mp::utils::run_cmd_for_status("ip", {"link", "delete", tap_device_name});
-    }
-}
-
 auto qmp_execute_json(const QString& cmd)
 {
     QJsonObject qmp;
@@ -122,16 +114,16 @@ bool instance_image_has_snapshot(const mp::ConfinementSystem* confinement, const
 
 mp::QemuVirtualMachine::QemuVirtualMachine(const std::shared_ptr<ConfinementSystem>& confinement_system,
                                            const VirtualMachineDescription& desc, const std::string& tap_device_name,
-                                           DNSMasqServer& dnsmasq_server, VMStatusMonitor& monitor)
+                                           DNSMasqServer& dnsmasq_server, VMStatusMonitor& monitor, const std::function<void()> &cleanup)
     : VirtualMachine{instance_image_has_snapshot(confinement_system.get(), desc.image.image_path) ? State::suspended
                                                                                                   : State::off,
                      desc.key_provider, desc.vm_name},
       confinement_system{confinement_system},
-      tap_device_name{tap_device_name},
       mac_addr{desc.mac_addr},
       username{desc.ssh_username},
       dnsmasq_server{&dnsmasq_server},
       monitor{&monitor},
+      cleanup{cleanup},
       vm_process{make_qemu_process(confinement_system.get(), desc, tap_device_name, mac_addr)}
 {
     QObject::connect(vm_process.get(), &Process::started, [this]() {
@@ -210,7 +202,7 @@ mp::QemuVirtualMachine::~QemuVirtualMachine()
     update_shutdown_status = false;
     if (state == State::running)
         suspend();
-    remove_tap_device(QString::fromStdString(tap_device_name));
+    cleanup();
     vm_process->waitForFinished();
 }
 

@@ -89,6 +89,14 @@ void create_tap_device(mp::Process* ip_process, const QString& tap_name, const Q
     }
 }
 
+void remove_tap_device(mp::Process* ip_process, const QString& tap_device_name)
+{
+    if (ip_process->run_and_return_status({"addr", "show", tap_device_name}))
+    {
+        ip_process->run_and_return_status({"link", "delete", tap_device_name});
+    }
+}
+
 void set_ip_forward()
 {
     // Command line equivalent: "sysctl -w net.ipv4.ip_forward=1"
@@ -225,7 +233,8 @@ mp::QemuVirtualMachineFactory::QemuVirtualMachineFactory(const mp::Path& data_di
       bridge_name{QString::fromStdString(multipass_bridge_name)},
       ip_process{confinement_system->create_process(std::make_unique<IPProcessSpec>())},
       iptables_process{confinement_system->create_process(std::make_unique<IptablesProcessSpec>())},
-      dnsmasq_server{create_dnsmasq_server(confinement_system, ip_process.get(), iptables_process.get(), data_dir, bridge_name)}
+      dnsmasq_server{
+          create_dnsmasq_server(confinement_system, ip_process.get(), iptables_process.get(), data_dir, bridge_name)}
 {
 }
 
@@ -240,8 +249,11 @@ mp::VirtualMachine::UPtr mp::QemuVirtualMachineFactory::create_virtual_machine(c
     auto tap_device_name = generate_tap_device_name(desc.vm_name);
     create_tap_device(ip_process.get(), QString::fromStdString(tap_device_name), bridge_name);
 
+    auto cleanup = [ip = ip_process.get(), tap_device_name]() {
+        remove_tap_device(ip, QString::fromStdString(tap_device_name));
+    };
     auto vm =
-        std::make_unique<mp::QemuVirtualMachine>(confinement_system, desc, tap_device_name, dnsmasq_server, monitor);
+        std::make_unique<mp::QemuVirtualMachine>(confinement_system, desc, tap_device_name, dnsmasq_server, monitor, cleanup);
 
     name_to_mac_map.emplace(desc.vm_name, desc.mac_addr);
     return vm;
