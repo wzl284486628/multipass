@@ -45,8 +45,9 @@ public:
 private:
     const std::shared_ptr<ConfinementSystem> confinement_system;
     const QString bridge_name;
-    DNSMasqServer dnsmasq_server;
     std::unordered_map<std::string, std::string> name_to_mac_map;
+    std::unique_ptr<Process> ip_process, iptables_process;
+    DNSMasqServer dnsmasq_server;
 };
 }
 

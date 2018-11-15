@@ -20,6 +20,8 @@ add_library(qemu_backend STATIC
   dhcp_release_process_spec.cpp
   dnsmasq_process_spec.cpp
   dnsmasq_server.cpp
+  iptables_process_spec.cpp
+  ip_process_spec.cpp
   qemuimg_process_spec.cpp
   qemu_process_spec.cpp
   qemu_virtual_machine_factory.cpp
