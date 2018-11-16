@@ -19,11 +19,6 @@
 
 namespace mp = multipass;
 
-mp::IPProcessSpec::IPProcessSpec()
-{
-
-}
-
 QString mp::IPProcessSpec::program() const
 {
     return QStringLiteral("ip");

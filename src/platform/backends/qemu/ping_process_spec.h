@@ -15,18 +15,18 @@
  *
  */
 
-#ifndef MULTIPASS_IP_PROCESS_SPEC_H
-#define MULTIPASS_IP_PROCESS_SPEC_H
+#ifndef MULTIPASS_PING_PROCESS_SPEC_H
+#define MULTIPASS_PING_PROCESS_SPEC_H
 
 #include <multipass/process_spec.h>
 
 namespace multipass
 {
 
-class IPProcessSpec : public ProcessSpec
+class PingProcessSpec : public ProcessSpec
 {
 public:
-    IPProcessSpec() = default;
+    PingProcessSpec() = default;
 
     QString program() const override;
     QString apparmor_profile() const override;
@@ -34,4 +34,4 @@ public:
 
 } // namespace multipass
 
-#endif // MULTIPASS_IP_PROCESS_SPEC_H
+#endif // PING_PROCESS_SPEC_H

@@ -15,23 +15,30 @@
  *
  */
 
-#ifndef MULTIPASS_IP_PROCESS_SPEC_H
-#define MULTIPASS_IP_PROCESS_SPEC_H
+#include "ping_process_spec.h"
 
-#include <multipass/process_spec.h>
+namespace mp = multipass;
 
-namespace multipass
+QString mp::PingProcessSpec::process() const
 {
+    return QStringLiteral("ping");
+}
 
-class IPProcessSpec : public ProcessSpec
+QString mp::PingProcessSpec::apparmor_profile() const
 {
-public:
-    IPProcessSpec() = default;
+    QString profile_template(R"END(
+#include <tunables/global>
+profile %1 flags=(attach_disconnected) {
+  #include <abstractions/base>
 
-    QString program() const override;
-    QString apparmor_profile() const override;
-};
+  capability net_raw,
 
-} // namespace multipass
+  network inet    dgram,
+  network inet6   dgram,
+  network inet    raw,
+  network inet6   raw,
+}
+    )END");
 
-#endif // MULTIPASS_IP_PROCESS_SPEC_H
+    return profile_template.arg(apparmor_profile_name());
+}
