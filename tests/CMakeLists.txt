@@ -134,7 +134,7 @@ target_link_libraries(multipass_tests
   iso
   libvirt_backend_test
   metrics
-  petname
+  platform
   simplestreams
   scp_test
   ssh_test

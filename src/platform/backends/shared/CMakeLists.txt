@@ -1,4 +1,4 @@
-# Copyright © 2017-2019 Canonical Ltd.
+# Copyright © 2019 Canonical Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as
@@ -10,9 +10,12 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
+# along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-add_subdirectory(shared)
-add_subdirectory(libvirt)
-add_subdirectory(qemu)
+add_subdirectory(linux)
+
+add_library(shared STATIC
+  sshfs_server_process_spec.cpp)
+
+target_link_libraries(shared
+  Qt5::Core)

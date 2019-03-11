@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Canonical, Ltd.
+ * Copyright (C) 2017-2019 Canonical, Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,8 +13,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alberto Aguirre <alberto.aguirre@canonical.com>
- *
  */
 
 #include <multipass/platform.h>
@@ -23,8 +21,10 @@
 #include <multipass/process_factory.h>
 #include <multipass/virtual_machine_factory.h>
 
+#include "backends/shared/sshfs_server_process_spec.h"
 #include "backends/libvirt/libvirt_virtual_machine_factory.h"
 #include "backends/qemu/qemu_virtual_machine_factory.h"
+
 #include "logger/journald_logger.h"
 
 namespace mp = multipass;
@@ -58,6 +58,11 @@ mp::VirtualMachineFactory::UPtr mp::platform::vm_backend(const mp::Path& data_di
         return std::make_unique<LibVirtVirtualMachineFactory>(::process_factory(), data_dir);
 
     throw std::runtime_error("Invalid virtualization driver set in the environment");
+}
+
+std::unique_ptr<QProcess> mp::platform::make_sshfs_server_process(const mp::SSHFSServerConfig& config)
+{
+    return ::process_factory()->create_process(std::make_unique<mp::SSHFSServerProcessSpec>(config));
 }
 
 mp::logging::Logger::UPtr mp::platform::make_logger(mp::logging::Level level)

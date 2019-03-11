@@ -1,4 +1,4 @@
-#Copyright © 2018 Canonical Ltd.
+#Copyright © 2018-2019 Canonical Ltd.
 #
 #This program is free software : you can redistribute it and / or modify
 #it under the terms of the GNU General Public License version 3 as
@@ -27,6 +27,7 @@ function(add_libvirt_target TARGET_NAME)
     ip_address
     process
     Qt5::Core
+    shared
     shared_linux
     ssh
     utils

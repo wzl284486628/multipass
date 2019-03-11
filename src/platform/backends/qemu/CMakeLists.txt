@@ -26,6 +26,7 @@ target_link_libraries(qemu_backend
   Qt5::Network
   ip_address
   process
+  shared
   shared_linux
   ssh
   utils
