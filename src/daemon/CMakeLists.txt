@@ -46,6 +46,7 @@ target_link_libraries(daemon
   metrics
   petname
   platform
+  process
   rpc
   simplestreams
   ssh

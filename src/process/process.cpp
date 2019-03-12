@@ -15,26 +15,17 @@
  *
  */
 
-#include "process.h"
-#include "process_spec.h"
-
 #include <multipass/logging/log.h>
+#include <multipass/process.h>
 
 namespace mp = multipass;
 namespace mpl = multipass::logging;
 
-mp::Process::Process(std::unique_ptr<mp::ProcessSpec>&& spec) : process_spec{std::move(spec)}
+mp::Process::Process(multipass::logging::Level log_level)
 {
-    setProgram(process_spec->program());
-    setArguments(process_spec->arguments());
-    setProcessEnvironment(process_spec->environment());
-    if (!process_spec->working_directory().isNull())
-        setWorkingDirectory(process_spec->working_directory());
-
     // TODO: multiline output produces poor formatting in logs, needs improving
-    QObject::connect(this, &Process::readyReadStandardError, [this]() {
-        mpl::log(process_spec->error_log_level(), qPrintable(process_spec->program()),
-                 qPrintable(readAllStandardError()));
+    QObject::connect(this, &Process::readyReadStandardError, [this, log_level]() {
+        mpl::log(log_level, qPrintable(program()), qPrintable(readAllStandardError()));
     });
 }
 
@@ -60,6 +51,6 @@ void mp::Process::run_and_wait_until_finished(const QStringList& extra_arguments
     start(extra_arguments);
     if (!waitForFinished(timeout) || exitStatus() != QProcess::NormalExit)
     {
-        mpl::log(mpl::Level::error, qPrintable(process_spec->program()), qPrintable(errorString()));
+        mpl::log(mpl::Level::error, qPrintable(program()), qPrintable(errorString()));
     }
 }

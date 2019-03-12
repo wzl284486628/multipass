@@ -15,7 +15,7 @@
  *
  */
 
-#include <shared/linux/process_spec.h>
+#include <multipass/process_spec.h>
 
 namespace mp = multipass;
 namespace mpl = multipass::logging;

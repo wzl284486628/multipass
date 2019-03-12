@@ -25,6 +25,7 @@ function(add_libvirt_target TARGET_NAME)
   target_link_libraries(${TARGET_NAME}
     fmt
     ip_address
+    process
     Qt5::Core
     shared_linux
     ssh

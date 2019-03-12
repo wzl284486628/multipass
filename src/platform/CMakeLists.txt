@@ -19,6 +19,7 @@ add_library(platform STATIC
   platform_unix.cpp)
 
 target_link_libraries(platform
+  process
   qemu_backend
   libvirt_backend
   journaldlogger)

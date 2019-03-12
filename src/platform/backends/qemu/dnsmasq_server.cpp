@@ -19,9 +19,9 @@
 
 #include "dnsmasq_process_spec.h"
 #include <multipass/logging/log.h>
+#include <multipass/process.h>
+#include <multipass/process_factory.h>
 #include <multipass/utils.h>
-#include <shared/linux/process.h>
-#include <shared/linux/process_factory.h>
 
 #include <fmt/format.h>
 

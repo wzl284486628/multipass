@@ -20,11 +20,11 @@
 
 #include <multipass/logging/log.h>
 #include <multipass/optional.h>
+#include <multipass/process_factory.h>
 #include <multipass/utils.h>
 #include <multipass/virtual_machine_description.h>
 
 #include <shared/linux/backend_utils.h>
-#include <shared/linux/process_factory.h>
 
 #include <fmt/format.h>
 #include <yaml-cpp/yaml.h>

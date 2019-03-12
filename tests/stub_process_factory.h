@@ -18,8 +18,9 @@
 #ifndef MULTIPASS_STUB_PROCESS_FACTORY_H
 #define MULTIPASS_STUB_PROCESS_FACTORY_H
 
-#include <src/platform/backends/shared/linux/process.h>
-#include <src/platform/backends/shared/linux/process_factory.h>
+#include <multipass/process.h>
+#include <multipass/process_spec.h>
+#include <multipass/process_factory.h>
 
 namespace multipass
 {
@@ -38,7 +39,7 @@ public:
 class StubProcess : public Process
 {
 public:
-    StubProcess() : Process{std::make_unique<StubProcessSpec>()}
+    StubProcess() : Process(multipass::logging::Level::warning)
     {
     }
 };

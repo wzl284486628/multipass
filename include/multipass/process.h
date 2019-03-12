@@ -18,9 +18,9 @@
 #ifndef MULTIPASS_PROCESS_H
 #define MULTIPASS_PROCESS_H
 
-#include "process_spec.h"
 #include <QProcess>
 #include <memory>
+#include <multipass/logging/level.h>
 
 namespace multipass
 {
@@ -31,6 +31,7 @@ class Process : public QProcess
 public:
     using UPtr = std::unique_ptr<Process>;
 
+    Process(multipass::logging::Level log_level);
     virtual ~Process() = default;
 
     void start(const QStringList& extra_arguments = QStringList());
@@ -40,9 +41,6 @@ public:
 
 protected:
     void run_and_wait_until_finished(const QStringList& extra_arguments = QStringList(), const int timeout = 30000);
-
-    Process(std::unique_ptr<ProcessSpec>&& spec);
-    const std::unique_ptr<ProcessSpec> process_spec;
 };
 
 } // namespace multipass

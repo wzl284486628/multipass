@@ -1,4 +1,4 @@
-# Copyright © 2018-2019 Canonical Ltd.
+# Copyright © 2019 Canonical Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as
@@ -12,12 +12,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set (CMAKE_AUTOMOC ON)
-add_library(shared_linux STATIC
-  backend_utils.cpp
-  qemuimg_process_spec.cpp)
+set(CMAKE_AUTOMOC ON)
 
-target_link_libraries(shared_linux
+add_library(process STATIC
+  process.cpp
+  process_spec.cpp
+  process_factory.cpp
+
+  # need to run MOC on these
+  ${CMAKE_SOURCE_DIR}/include/multipass/process.h)
+
+target_link_libraries(process
   fmt
-  utils
   Qt5::Core)

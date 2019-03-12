@@ -15,17 +15,22 @@
  *
  */
 
-#include "process_factory.h"
-#include "process.h"
-#include "process_spec.h"
+#include <multipass/process.h>
+#include <multipass/process_factory.h>
+#include <multipass/process_spec.h>
 
 namespace mp = multipass;
 
 class UnsecuredProcess : public mp::Process
 {
 public:
-    UnsecuredProcess(std::unique_ptr<mp::ProcessSpec>&& spec) : Process{std::move(spec)}
+    UnsecuredProcess(std::unique_ptr<mp::ProcessSpec>&& process_spec) : Process(process_spec->error_log_level())
     {
+        setProgram(process_spec->program());
+        setArguments(process_spec->arguments());
+        setProcessEnvironment(process_spec->environment());
+        if (!process_spec->working_directory().isNull())
+            setWorkingDirectory(process_spec->working_directory());
     }
 };
 
