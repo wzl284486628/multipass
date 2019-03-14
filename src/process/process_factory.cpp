@@ -21,10 +21,12 @@
 
 namespace mp = multipass;
 
+namespace
+{
 class UnsecuredProcess : public mp::Process
 {
 public:
-    UnsecuredProcess(std::unique_ptr<mp::ProcessSpec>&& process_spec) : Process(process_spec->error_log_level())
+    UnsecuredProcess(std::unique_ptr<mp::ProcessSpec>&& process_spec) : mp::Process(process_spec->error_log_level())
     {
         setProgram(process_spec->program());
         setArguments(process_spec->arguments());
@@ -33,9 +35,10 @@ public:
             setWorkingDirectory(process_spec->working_directory());
     }
 };
+} // namespace
 
 // This is the default ProcessFactory that creates a Process with no security mechanisms enabled
 std::unique_ptr<mp::Process> mp::ProcessFactory::create_process(std::unique_ptr<mp::ProcessSpec>&& process_spec) const
 {
-    return std::make_unique<UnsecuredProcess>(std::move(process_spec));
+    return std::make_unique<::UnsecuredProcess>(std::move(process_spec));
 }

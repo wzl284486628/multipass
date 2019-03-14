@@ -27,6 +27,8 @@
 
 #include "logger/journald_logger.h"
 
+#include <unistd.h> // for setpgid()
+
 namespace mp = multipass;
 
 namespace
@@ -37,6 +39,7 @@ mp::ProcessFactory* process_factory()
 {
     if (!static_process_factory)
     {
+        ::setpgid(0, 0); // create own process group
         static_process_factory = std::make_unique<mp::ProcessFactory>();
     }
     return static_process_factory.get();
