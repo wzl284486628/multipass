@@ -18,6 +18,7 @@
 #include <src/platform/backends/qemu/qemu_virtual_machine_factory.h>
 #include <src/platform/backends/shared/linux/process_factory.h>
 
+#include "fake_linux_process_factory.h"
 #include "mock_status_monitor.h"
 #include "stub_process_factory.h"
 #include "stub_ssh_key_provider.h"
@@ -124,7 +125,8 @@ TEST_F(QemuBackend, vm_command_version_is_written_to_metadata)
 TEST_F(QemuBackend, vm_command_version_0_is_used)
 {
     NiceMock<mpt::MockVMStatusMonitor> mock_monitor;
-    mp::QemuVirtualMachineFactory backend{&stub_process_factory, data_dir.path()};
+    mpt::FakeLinuxProcessFactory factory;
+    mp::QemuVirtualMachineFactory backend{&factory, data_dir.path()};
 
     auto machine = backend.create_virtual_machine(default_description, mock_monitor);
 
@@ -133,6 +135,54 @@ TEST_F(QemuBackend, vm_command_version_0_is_used)
     ON_CALL(mock_monitor, retrieve_metadata_for)
         .WillByDefault(Return(QJsonObject({{"machine_type", ""}, {"vm_command_version", 0}})));
 
-    machine->start();
+    // machine->start();
+
     // check qemu command line that "cdrom" not used
+    ASSERT_EQ(factory.created_processes.size(), 2u);
+    EXPECT_FALSE(factory.created_processes[1].program.contains("cdrom="));
+}
+
+TEST_F(QemuBackend, machine_unknown_state_properly_shuts_down)
+{
+    NiceMock<mpt::MockVMStatusMonitor> mock_monitor;
+    mp::QemuVirtualMachineFactory backend{&process_factory, data_dir.path()};
+
+    auto machine = backend.create_virtual_machine(default_description, mock_monitor);
+
+    EXPECT_CALL(mock_monitor, persist_state_for(_, _));
+    EXPECT_CALL(mock_monitor, on_resume());
+    machine->start();
+
+    machine->state = mp::VirtualMachine::State::unknown;
+
+    EXPECT_CALL(mock_monitor, persist_state_for(_, _));
+    EXPECT_CALL(mock_monitor, on_shutdown());
+    machine->shutdown();
+
+    EXPECT_THAT(machine->current_state(), Eq(mp::VirtualMachine::State::off));
+}
+
+TEST_F(QemuBackend, verify_dnsmasq_and_qemu_processes_created)
+{
+    NiceMock<mpt::MockVMStatusMonitor> mock_monitor;
+    mpt::FakeLinuxProcessFactory factory;
+    mp::QemuVirtualMachineFactory backend{&factory, data_dir.path()};
+
+    auto machine = backend.create_virtual_machine(default_description, mock_monitor);
+
+    ASSERT_EQ(factory.created_processes.size(), 2u);
+    EXPECT_EQ(factory.created_processes[0].program, "dnsmasq");
+    EXPECT_TRUE(factory.created_processes[1].program.startsWith("qemu-system-"));
+}
+
+TEST_F(QemuBackend, verify_qemu_arguments)
+{
+    NiceMock<mpt::MockVMStatusMonitor> mock_monitor;
+    mpt::FakeLinuxProcessFactory factory;
+    mp::QemuVirtualMachineFactory backend{&factory, data_dir.path()};
+
+    auto machine = backend.create_virtual_machine(default_description, mock_monitor);
+
+    ASSERT_EQ(factory.created_processes.size(), 2u);
+    EXPECT_TRUE(factory.created_processes[1].arguments.contains("virtio-net-pci,netdev=hostnet0,id=net0,mac="));
 }

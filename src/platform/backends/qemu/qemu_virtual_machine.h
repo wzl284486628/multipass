@@ -20,10 +20,10 @@
 
 #include <multipass/ip_address.h>
 #include <multipass/optional.h>
+#include <multipass/process.h>
 #include <multipass/virtual_machine.h>
 #include <multipass/virtual_machine_description.h>
 
-#include "shared/linux/process.h"
 #include <QStringList>
 
 namespace multipass
@@ -69,7 +69,8 @@ private:
     const std::string username;
     DNSMasqServer* dnsmasq_server;
     VMStatusMonitor* monitor;
-    std::unique_ptr<multipass::Process> vm_process;
+    std::unique_ptr<Process> vm_process;
+    const QString cloud_init_path;
     std::string saved_error_msg;
     bool update_shutdown_status{true};
     bool delete_memory_snapshot{false};
