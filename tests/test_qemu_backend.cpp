@@ -19,6 +19,7 @@
 #include <src/platform/backends/shared/linux/process_factory.h>
 
 #include "mock_status_monitor.h"
+#include "stub_process_factory.h"
 #include "stub_ssh_key_provider.h"
 #include "stub_status_monitor.h"
 #include "temp_dir.h"
@@ -39,6 +40,7 @@ struct QemuBackend : public mpt::TestWithMockedBinPath
     mpt::TempFile dummy_image;
     mpt::TempFile dummy_cloud_init_iso;
     mp::ProcessFactory process_factory; // want to launch actual processes
+    mpt::StubProcessFactory stub_process_factory;
     mp::VirtualMachineDescription default_description{2,
                                                       mp::MemorySize{"3M"},
                                                       mp::MemorySize{}, // not used
@@ -105,4 +107,32 @@ TEST_F(QemuBackend, throws_when_starting_while_suspending)
     machine->state = mp::VirtualMachine::State::suspending;
 
     EXPECT_THROW(machine->start(), std::runtime_error);
+}
+
+TEST_F(QemuBackend, vm_command_version_is_written_to_metadata)
+{
+    NiceMock<mpt::MockVMStatusMonitor> mock_monitor;
+    mp::QemuVirtualMachineFactory backend{&stub_process_factory, data_dir.path()};
+
+    auto machine = backend.create_virtual_machine(default_description, mock_monitor);
+
+    EXPECT_CALL(mock_monitor, update_metadata_for(_, QJsonObject({{"machine_type", ""}, {"vm_command_version", 1}})));
+
+    machine->start();
+}
+
+TEST_F(QemuBackend, vm_command_version_0_is_used)
+{
+    NiceMock<mpt::MockVMStatusMonitor> mock_monitor;
+    mp::QemuVirtualMachineFactory backend{&stub_process_factory, data_dir.path()};
+
+    auto machine = backend.create_virtual_machine(default_description, mock_monitor);
+
+    machine->state = mp::VirtualMachine::State::suspended;
+
+    ON_CALL(mock_monitor, retrieve_metadata_for)
+        .WillByDefault(Return(QJsonObject({{"machine_type", ""}, {"vm_command_version", 0}})));
+
+    machine->start();
+    // check qemu command line that "cdrom" not used
 }

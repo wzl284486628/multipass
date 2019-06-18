@@ -21,10 +21,10 @@
 #include <multipass/ip_address.h>
 #include <multipass/optional.h>
 #include <multipass/virtual_machine.h>
+#include <multipass/virtual_machine_description.h>
 
+#include "shared/linux/process.h"
 #include <QStringList>
-
-class QProcess;
 
 namespace multipass
 {
@@ -60,15 +60,16 @@ private:
     void on_suspend();
     void on_restart();
     void ensure_vm_is_running();
+    void create_connections();
+    const ProcessFactory* process_factory;
+    const VirtualMachineDescription vm_desc;
     multipass::optional<IPAddress> ip;
     const std::string tap_device_name;
     const std::string mac_addr;
     const std::string username;
     DNSMasqServer* dnsmasq_server;
     VMStatusMonitor* monitor;
-    std::unique_ptr<QProcess> vm_process;
-    const QStringList original_args;
-    const QString cloud_init_path;
+    std::unique_ptr<multipass::Process> vm_process;
     std::string saved_error_msg;
     bool update_shutdown_status{true};
     bool delete_memory_snapshot{false};

@@ -21,9 +21,9 @@
 
 namespace mp = multipass;
 
-mp::QemuVMProcessSpec::QemuVMProcessSpec(const mp::VirtualMachineDescription& desc, const QString& tap_device_name,
-                                         const QString& mac_addr)
-    : desc(desc), tap_device_name(tap_device_name), mac_addr(mac_addr)
+mp::QemuVMProcessSpec::QemuVMProcessSpec(const mp::VirtualMachineDescription& desc, int version,
+                                         const QString& tap_device_name, const QString& mac_addr)
+    : desc(desc), version(version), tap_device_name(tap_device_name), mac_addr(mac_addr)
 {
 }
 
@@ -63,6 +63,15 @@ QStringList mp::QemuVMProcessSpec::arguments() const
          << "chardev:char0"
          // TODO Add a debugging mode with access to console
          << "-nographic";
+
+    if (version > 0)
+    { // version=1+
+        args << "-cdrom" << desc.cloud_init_iso;
+    }
+    else
+    { // version=0
+        args << "-drive" << QString("file=%1,if=virtio,format=raw,snapshot=off,read-only").arg(desc.cloud_init_iso);
+    }
 
     return args;
 }

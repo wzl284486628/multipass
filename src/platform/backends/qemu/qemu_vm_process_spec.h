@@ -28,7 +28,7 @@ namespace multipass
 class QemuVMProcessSpec : public ProcessSpec
 {
 public:
-    explicit QemuVMProcessSpec(const VirtualMachineDescription& desc, const QString& tap_device_name,
+    explicit QemuVMProcessSpec(const VirtualMachineDescription& desc, int version, const QString& tap_device_name,
                                const QString& mac_addr);
 
     QString program() const override;
@@ -37,6 +37,7 @@ public:
 
 private:
     const VirtualMachineDescription desc;
+    const int version;
     const QString tap_device_name, mac_addr;
 };
 

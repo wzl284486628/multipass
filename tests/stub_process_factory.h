@@ -38,16 +38,23 @@ public:
 class StubProcess : public Process
 {
 public:
-    StubProcess() : Process{std::make_unique<StubProcessSpec>()}
+    StubProcess(std::unique_ptr<ProcessSpec>&& spec) : Process{std::move(spec)}
     {
+        setProgram("sleep");
+        setArguments({"1"});
+    }
+
+    QStringList get_arguments()
+    {
+        return process_spec->arguments();
     }
 };
 
 class StubProcessFactory : public ProcessFactory
 {
-    std::unique_ptr<Process> create_process(std::unique_ptr<ProcessSpec>&&) const override
+    std::unique_ptr<Process> create_process(std::unique_ptr<ProcessSpec>&& spec) const override
     {
-        return std::make_unique<StubProcess>();
+        return std::make_unique<StubProcess>(std::move(spec));
     }
 };
 } // namespace test
