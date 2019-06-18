@@ -17,13 +17,22 @@
 
 #include "qemu_vm_process_spec.h"
 
+#include <multipass/logging/log.h>
 #include <shared/linux/backend_utils.h>
+#include <multipass/format.h>
 
 namespace mp = multipass;
+namespace mpl = multipass::logging;
+
+namespace
+{
+constexpr auto default_machine_type = "pc-i440fx-xenial";
+} // namespace
 
 mp::QemuVMProcessSpec::QemuVMProcessSpec(const mp::VirtualMachineDescription& desc, int version,
-                                         const QString& tap_device_name, const QString& mac_addr)
-    : desc(desc), version(version), tap_device_name(tap_device_name), mac_addr(mac_addr)
+                                         const QString& tap_device_name, const QString& mac_addr,
+                                         const multipass::optional<ResumeData>& resume_data)
+    : desc(desc), version(version), tap_device_name(tap_device_name), mac_addr(mac_addr), resume_data{resume_data}
 {
 }
 
@@ -71,6 +80,20 @@ QStringList mp::QemuVMProcessSpec::arguments() const
     else
     { // version=0
         args << "-drive" << QString("file=%1,if=virtio,format=raw,snapshot=off,read-only").arg(desc.cloud_init_iso);
+    }
+
+    if (resume_data)
+    {
+        QString machine_type = resume_data->machine_type;
+        if (machine_type.isNull())
+        {
+            mpl::log(mpl::Level::info, desc.vm_name,
+                     fmt::format("Cannot determine QEMU machine type. Defaulting to '{}'.", default_machine_type));
+            machine_type = default_machine_type;
+        }
+
+        args << "-loadvm" << resume_data->suspend_tag;
+        args << "-machine" << machine_type;
     }
 
     return args;

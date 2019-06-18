@@ -20,6 +20,7 @@
 
 #include <shared/linux/process_spec.h>
 
+#include <multipass/optional.h>
 #include <multipass/virtual_machine_description.h>
 
 namespace multipass
@@ -28,8 +29,14 @@ namespace multipass
 class QemuVMProcessSpec : public ProcessSpec
 {
 public:
+    struct ResumeData
+    {
+        QString suspend_tag;
+        QString machine_type;
+    };
+
     explicit QemuVMProcessSpec(const VirtualMachineDescription& desc, int version, const QString& tap_device_name,
-                               const QString& mac_addr);
+                               const QString& mac_addr, const multipass::optional<ResumeData>& resume_data);
 
     QString program() const override;
     QStringList arguments() const override;
@@ -39,8 +46,8 @@ private:
     const VirtualMachineDescription desc;
     const int version;
     const QString tap_device_name, mac_addr;
+    const multipass::optional<ResumeData>& resume_data;
 };
-
 } // namespace multipass
 
 #endif // MULTIPASS_QEMU_PROCESS_H
