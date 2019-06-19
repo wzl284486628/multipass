@@ -122,26 +122,6 @@ TEST_F(QemuBackend, vm_command_version_is_written_to_metadata)
     machine->start();
 }
 
-TEST_F(QemuBackend, vm_command_version_0_is_used)
-{
-    NiceMock<mpt::MockVMStatusMonitor> mock_monitor;
-    mpt::FakeLinuxProcessFactory factory;
-    mp::QemuVirtualMachineFactory backend{&factory, data_dir.path()};
-
-    auto machine = backend.create_virtual_machine(default_description, mock_monitor);
-
-    machine->state = mp::VirtualMachine::State::suspended;
-
-    ON_CALL(mock_monitor, retrieve_metadata_for)
-        .WillByDefault(Return(QJsonObject({{"machine_type", ""}, {"vm_command_version", 0}})));
-
-    // machine->start();
-
-    // check qemu command line that "cdrom" not used
-    ASSERT_EQ(factory.created_processes.size(), 2u);
-    EXPECT_FALSE(factory.created_processes[1].program.contains("cdrom="));
-}
-
 TEST_F(QemuBackend, machine_unknown_state_properly_shuts_down)
 {
     NiceMock<mpt::MockVMStatusMonitor> mock_monitor;

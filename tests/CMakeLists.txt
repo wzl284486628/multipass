@@ -24,6 +24,7 @@ include(c_mock_defines.cmake)
 list(APPEND BACKEND_TESTS
   mock_libvirt.cpp
   test_qemu_backend.cpp
+  test_qemu_vm_process_spec.cpp
   test_dnsmasq_server.cpp
   test_libvirt_backend.cpp
   test_with_mocked_bin_path.cpp)
@@ -118,6 +119,7 @@ add_executable(multipass_tests
 
 target_include_directories(multipass_tests
   PRIVATE ${CMAKE_SOURCE_DIR}
+  PRIVATE ${CMAKE_SOURCE_DIR}/src/platform/backends
   PRIVATE ${MULTIPASS_GTEST_DIR}
   PRIVATE ${MULTIPASS_GTEST_DIR}/include
   PRIVATE ${MULTIPASS_GMOCK_DIR}
