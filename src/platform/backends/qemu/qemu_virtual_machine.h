@@ -60,10 +60,10 @@ private:
     void on_shutdown();
     void on_suspend();
     void on_restart();
-    const std::string mac_addr;
     const std::string tap_device_name;
     std::unique_ptr<Process> vm_process;
     multipass::optional<IPAddress> ip;
+    const std::string mac_addr;
     const std::string username;
     DNSMasqServer* dnsmasq_server;
     VMStatusMonitor* monitor;

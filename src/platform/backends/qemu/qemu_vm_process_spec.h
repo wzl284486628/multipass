@@ -35,8 +35,10 @@ public:
         QString machine_type;
     };
 
+    static int latest_version();
+
     explicit QemuVMProcessSpec(const VirtualMachineDescription& desc, int version, const QString& tap_device_name,
-                               const QString& mac_addr, const multipass::optional<ResumeData>& resume_data);
+                               const multipass::optional<ResumeData>& resume_data);
 
     QString program() const override;
     QStringList arguments() const override;
@@ -45,8 +47,8 @@ public:
 private:
     const VirtualMachineDescription desc;
     const int version;
-    const QString tap_device_name, mac_addr;
-    const multipass::optional<ResumeData>& resume_data;
+    const QString tap_device_name;
+    const multipass::optional<ResumeData> resume_data;
 };
 } // namespace multipass
 

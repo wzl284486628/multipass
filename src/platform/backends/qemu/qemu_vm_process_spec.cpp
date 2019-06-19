@@ -17,9 +17,9 @@
 
 #include "qemu_vm_process_spec.h"
 
+#include <multipass/format.h>
 #include <multipass/logging/log.h>
 #include <shared/linux/backend_utils.h>
-#include <multipass/format.h>
 
 namespace mp = multipass;
 namespace mpl = multipass::logging;
@@ -29,10 +29,27 @@ namespace
 constexpr auto default_machine_type = "pc-i440fx-xenial";
 } // namespace
 
+/*
+ * Qemu will often fail to resume a VM that was run with a different command line.
+ * To support backward compatibility, we version each Qemu command line iteration.
+ *
+ * Versions:
+ *  1 - changed how cloud-init ISO was specified:
+ *      Replaced: "-drive file=cloud-init.iso,if=virtio,format=raw,snapshot=off,read-only"
+ *      With:     "-cdrom cloud-init.iso"
+ *      Note this was originally encompassed in the metadata as "use_cdrom" being true.
+ *  0 - original
+ */
+
+int multipass::QemuVMProcessSpec::latest_version()
+{
+    return 1;
+}
+
 mp::QemuVMProcessSpec::QemuVMProcessSpec(const mp::VirtualMachineDescription& desc, int version,
-                                         const QString& tap_device_name, const QString& mac_addr,
+                                         const QString& tap_device_name,
                                          const multipass::optional<ResumeData>& resume_data)
-    : desc(desc), version(version), tap_device_name(tap_device_name), mac_addr(mac_addr), resume_data{resume_data}
+    : desc(desc), version(version), tap_device_name(tap_device_name), resume_data{resume_data}
 {
 }
 
@@ -54,7 +71,8 @@ QStringList mp::QemuVMProcessSpec::arguments() const
     // Memory to use for VM
     args << "-m" << mem_size;
     // Create a virtual NIC in the VM
-    args << "-device" << QString("virtio-net-pci,netdev=hostnet0,id=net0,mac=%1").arg(mac_addr);
+    args << "-device"
+         << QString("virtio-net-pci,netdev=hostnet0,id=net0,mac=%1").arg(QString::fromStdString(desc.mac_addr));
     // Create tap device to connect to virtual bridge
     args << "-netdev";
     args << QString("tap,id=hostnet0,ifname=%1,script=no,downscript=no").arg(tap_device_name);
