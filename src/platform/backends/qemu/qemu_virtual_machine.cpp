@@ -331,9 +331,6 @@ void mp::QemuVirtualMachine::shutdown()
         mpl::log(mpl::Level::info, vm_name, fmt::format("Ignoring shutdown issued while suspended"));
     }
 
-    if (!vm_process)
-        return;
-
     if ((state == State::running || state == State::delayed_shutdown || state == State::unknown) &&
         vm_process->running())
     {
