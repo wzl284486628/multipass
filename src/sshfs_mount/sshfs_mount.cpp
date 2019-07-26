@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Canonical, Ltd.
+ * Copyright (C) 2017-2019 Canonical, Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,20 +31,6 @@ namespace mpl = multipass::logging;
 namespace
 {
 constexpr auto category = "sshfs mount";
-template <typename Callable>
-auto run_cmd(mp::SSHSession& session, std::string&& cmd, Callable&& error_handler)
-{
-    auto ssh_process = session.exec(cmd);
-    if (ssh_process.exit_code() != 0)
-        error_handler(ssh_process);
-    return ssh_process.read_std_output();
-}
-
-auto run_cmd(mp::SSHSession& session, std::string&& cmd)
-{
-    auto error_handler = [](mp::SSHProcess& proc) { throw std::runtime_error(proc.read_std_error()); };
-    return run_cmd(session, std::forward<std::string>(cmd), error_handler);
-}
 
 void check_sshfs_is_running(mp::SSHSession& session, mp::SSHProcess& sshfs_process, const std::string& source,
                             const std::string& target)
@@ -53,36 +39,37 @@ void check_sshfs_is_running(mp::SSHSession& session, mp::SSHProcess& sshfs_proce
 
     // Make sure sshfs actually runs
     std::this_thread::sleep_for(250ms);
-    auto error_handler = [&sshfs_process](mp::SSHProcess&) {
+    if (session.run_ssh_cmd_for_status(fmt::format("pgrep -fx \".*sshfs.*{}.*{}\"", source, target)) != 0)
         throw std::runtime_error(sshfs_process.read_std_error());
-    };
-    run_cmd(session, fmt::format("pgrep -fx \"sshfs.*{}.*{}\"", source, target), error_handler);
 }
 
 void check_sshfs_exists(mp::SSHSession& session)
 {
-    auto error_handler = [](mp::SSHProcess& proc) {
+    try
+    {
+        session.run_ssh_cmd("which sshfs");
+    }
+    catch (const std::exception& e)
+    {
         mpl::log(mpl::Level::warning, category,
-                 fmt::format("Unable to determine if 'sshfs' is installed: {}", proc.read_std_error()));
+                 fmt::format("Unable to determine if 'sshfs' is installed: {}", e.what()));
         throw mp::SSHFSMissingError();
-    };
-
-    run_cmd(session, "which sshfs", error_handler);
+    }
 }
 
 void make_target_dir(mp::SSHSession& session, const std::string& target)
 {
-    run_cmd(session, fmt::format("sudo mkdir -p \"{}\"", target));
+    session.run_ssh_cmd(fmt::format("sudo mkdir -p \"{}\"", target));
 }
 
 void set_owner_for(mp::SSHSession& session, const std::string& target)
 {
-    auto vm_user = run_cmd(session, "id -nu");
-    auto vm_group = run_cmd(session, "id -ng");
+    auto vm_user = session.run_ssh_cmd("id -nu");
+    auto vm_group = session.run_ssh_cmd("id -ng");
     mp::utils::trim_end(vm_user);
     mp::utils::trim_end(vm_group);
 
-    run_cmd(session, fmt::format("sudo chown {}:{} \"{}\"", vm_user, vm_group, target));
+    session.run_ssh_cmd(fmt::format("sudo chown {}:{} \"{}\"", vm_user, vm_group, target));
 }
 
 auto create_sshfs_process(mp::SSHSession& session, const std::string& source, const std::string& target)
@@ -108,11 +95,11 @@ auto make_sftp_server(mp::SSHSession&& session, const std::string& source, const
     auto sshfs_proc =
         create_sshfs_process(session, mp::utils::escape_char(source, '"'), mp::utils::escape_char(target, '"'));
 
-    auto output = run_cmd(session, "id -u");
+    auto output = session.run_ssh_cmd("id -u");
     mpl::log(mpl::Level::debug, category,
              fmt::format("{}:{} {}(): `id -u` = {}", __FILE__, __LINE__, __FUNCTION__, output));
     auto default_uid = std::stoi(output);
-    output = run_cmd(session, "id -g");
+    output = session.run_ssh_cmd("id -g");
     mpl::log(mpl::Level::debug, category,
              fmt::format("{}:{} {}(): `id -g` = {}", __FILE__, __LINE__, __FUNCTION__, output));
     auto default_gid = std::stoi(output);

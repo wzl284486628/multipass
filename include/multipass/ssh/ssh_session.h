@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Canonical, Ltd.
+ * Copyright (C) 2017-2019 Canonical, Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,8 @@ public:
                const std::chrono::milliseconds timeout = std::chrono::seconds(20));
 
     SSHProcess exec(const std::string& cmd);
+    std::string run_ssh_cmd(std::string&& cmd);
+    int run_ssh_cmd_for_status(std::string&& cmd);
 
     void force_shutdown();
     operator ssh_session() const;

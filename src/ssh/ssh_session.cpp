@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Canonical, Ltd.
+ * Copyright (C) 2017-2019 Canonical, Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,6 +71,22 @@ mp::SSHSession::SSHSession(const std::string& host, int port, const std::chrono:
 mp::SSHProcess mp::SSHSession::exec(const std::string& cmd)
 {
     return {session.get(), cmd};
+}
+
+std::string mp::SSHSession::run_ssh_cmd(std::string&& cmd)
+{
+    auto ssh_process = exec(cmd);
+    if (ssh_process.exit_code() != 0)
+        throw std::runtime_error(ssh_process.read_std_error());
+
+    return ssh_process.read_std_output();
+}
+
+int mp::SSHSession::run_ssh_cmd_for_status(std::string&& cmd)
+{
+    auto ssh_process = exec(cmd);
+
+    return ssh_process.exit_code();
 }
 
 void mp::SSHSession::force_shutdown()
