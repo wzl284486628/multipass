@@ -76,7 +76,6 @@ constexpr auto reboot_cmd = "sudo reboot";
 constexpr auto up_timeout = 2min; // This may be tweaked as appropriate and used in places that wait for ssh to be up
 constexpr auto cloud_init_timeout = 5min;
 constexpr auto stop_ssh_cmd = "sudo systemctl stop ssh";
-constexpr auto max_install_sshfs_retries = 3;
 constexpr auto default_mem = "1G";
 constexpr auto default_disk = "5G";
 
@@ -1237,7 +1236,7 @@ try // clang-format on
                 try
                 {
                     MountReply mount_reply;
-                    mount_reply.set_mount_message("Enabling support for mounting");
+                    mount_reply.set_mount_message("Installing the multipass-sshfs Snap package");
                     server->Write(mount_reply);
                     install_sshfs(vm.get(), name);
                     start_mount(vm.get(), name, request->source_path(), target_path, gid_map, uid_map);
@@ -2097,33 +2096,35 @@ void mp::Daemon::install_sshfs(VirtualMachine* vm, const std::string& name)
 
     SSHSession session{vm->ssh_hostname(), vm->ssh_port(), vm->ssh_username(), key_provider};
 
-    mpl::log(mpl::Level::info, category, fmt::format("Installing sshfs in \'{}\'", name));
+    mpl::log(mpl::Level::info, category, fmt::format("Installing the multipass-sshfs Snap for \'{}\'", name));
 
-    int retries{0};
-    while (++retries <= max_install_sshfs_retries)
+    // Check if Snap support is installed in the instance
+    if (session.run_ssh_cmd_for_status("which snap") != 0)
     {
-        try
-        {
-            auto proc = session.exec("sudo apt update && sudo apt install -y sshfs");
-            if (proc.exit_code(std::chrono::minutes(5)) != 0)
-            {
-                auto error_msg = proc.read_std_error();
-                mpl::log(mpl::Level::warning, category,
-                         fmt::format("Failed to install 'sshfs', error message: '{}'", mp::utils::trim_end(error_msg)));
-            }
-            else
-            {
-                break;
-            }
-        }
-        catch (const mp::ExitlessSSHProcessException&)
-        {
-            mpl::log(mpl::Level::info, category, fmt::format("Timeout while installing 'sshfs' in '{}'", name));
-        }
+        mpl::log(mpl::Level::warning, category, fmt::format("Snap support is not installed for \'{}\'", name));
+        throw std::runtime_error(
+            fmt::format("Snap support needs to be installed for \'{}\' in order to support mounts. "
+                        "Please see https://docs.snapcraft.io/installing-snapd for information on "
+                        "how to install Snap support for your instance's distribution.",
+                        name));
     }
 
-    if (retries > max_install_sshfs_retries)
-        throw mp::SSHFSMissingError();
+    try
+    {
+        auto proc = session.exec("sudo snap install multipass-sshfs");
+        if (proc.exit_code(std::chrono::minutes(5)) != 0)
+        {
+            auto error_msg = proc.read_std_error();
+            mpl::log(mpl::Level::warning, category,
+                     fmt::format("Failed to install \'multipass-sshfs\', error message: \'{}\'",
+                                 mp::utils::trim_end(error_msg)));
+            throw mp::SSHFSMissingError();
+        }
+    }
+    catch (const mp::ExitlessSSHProcessException&)
+    {
+        mpl::log(mpl::Level::info, category, fmt::format("Timeout while installing 'multipass-sshfs' for '{}'", name));
+    }
 }
 
 QFutureWatcher<mp::Daemon::AsyncOperationStatus>*

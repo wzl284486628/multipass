@@ -31,6 +31,8 @@ namespace mpl = multipass::logging;
 namespace
 {
 constexpr auto category = "sshfs mount";
+constexpr auto multipass_sshfs_bin_path = "/snap/multipass-sshfs/current/bin";
+constexpr auto multipass_sshfs_lib_path = "/snap/multipass-sshfs/current/lib";
 
 void check_sshfs_is_running(mp::SSHSession& session, mp::SSHProcess& sshfs_process, const std::string& source,
                             const std::string& target)
@@ -45,14 +47,9 @@ void check_sshfs_is_running(mp::SSHSession& session, mp::SSHProcess& sshfs_proce
 
 void check_sshfs_exists(mp::SSHSession& session)
 {
-    try
+    if (session.run_ssh_cmd_for_status(fmt::format("ls {}/sshfs", multipass_sshfs_bin_path)) != 0)
     {
-        session.run_ssh_cmd("which sshfs");
-    }
-    catch (const std::exception& e)
-    {
-        mpl::log(mpl::Level::warning, category,
-                 fmt::format("Unable to determine if 'sshfs' is installed: {}", e.what()));
+        mpl::log(mpl::Level::warning, category, fmt::format("The \'multipass-sshfs\' snap is not installed."));
         throw mp::SSHFSMissingError();
     }
 }
@@ -78,8 +75,9 @@ auto create_sshfs_process(mp::SSHSession& session, const std::string& source, co
     make_target_dir(session, target);
     set_owner_for(session, target);
 
-    auto sshfs_process = session.exec(fmt::format(
-        "sudo sshfs -o slave -o nonempty -o transform_symlinks -o allow_other :\"{}\" \"{}\"", source, target));
+    auto sshfs_process = session.exec(
+        fmt::format("sudo LD_LIBRARY_PATH={} {}/sshfs -o slave -o transform_symlinks -o allow_other :\"{}\" \"{}\"",
+                    multipass_sshfs_lib_path, multipass_sshfs_bin_path, source, target));
 
     check_sshfs_is_running(session, sshfs_process, source, target);
 
