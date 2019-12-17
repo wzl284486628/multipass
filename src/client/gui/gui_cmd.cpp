@@ -336,6 +336,7 @@ void cmd::GuiCmd::create_menu_actions_for(const std::string& instance_name, cons
         QIcon(), "Open Shell",
         [instance_name] { mp::cli::platform::open_multipass_shell(QString::fromStdString(instance_name)); },
         QKeySequence("ctrl+alt+U"));
+    instance_menu->actions().back()->setShortcutVisibleInContextMenu(true);
 
     instance_menu->addAction("Stop");
     QObject::connect(instance_menu->actions().back(), &QAction::triggered, [this, instance_name] {
