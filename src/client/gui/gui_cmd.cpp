@@ -332,10 +332,10 @@ void cmd::GuiCmd::create_menu_actions_for(const std::string& instance_name, cons
         future_synchronizer.addFuture(QtConcurrent::run(this, &GuiCmd::start_instance_for, instance_name));
     });
 
-    instance_menu->addAction("Open Shell");
-    QObject::connect(instance_menu->actions().back(), &QAction::triggered, [instance_name] {
-        mp::cli::platform::open_multipass_shell(QString::fromStdString(instance_name));
-    });
+    instance_menu->addAction(
+        QIcon(), "Open Shell",
+        [instance_name] { mp::cli::platform::open_multipass_shell(QString::fromStdString(instance_name)); },
+        QKeySequence("ctrl+alt+U"));
 
     instance_menu->addAction("Stop");
     QObject::connect(instance_menu->actions().back(), &QAction::triggered, [this, instance_name] {
