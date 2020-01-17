@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 Canonical, Ltd.
+ * Copyright (C) 2017-2020 Canonical, Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 #include <QFile>
 #include <QNetworkAccessManager>
 #include <QNetworkDiskCache>
+#include <QNetworkProxyFactory>
 #include <QNetworkReply>
 #include <QTimer>
 #include <QUrl>
@@ -115,6 +116,7 @@ mp::URLDownloader::URLDownloader(std::chrono::milliseconds timeout) : URLDownloa
 mp::URLDownloader::URLDownloader(const mp::Path& cache_dir, std::chrono::milliseconds timeout)
     : cache_dir_path{QDir(cache_dir).filePath("network-cache")}, timeout{timeout}
 {
+    QNetworkProxyFactory::setUseSystemConfiguration(true);
 }
 
 void mp::URLDownloader::download_to(const QUrl& url, const QString& file_name, int64_t size, const int download_type,
