@@ -30,6 +30,7 @@
 #include "backends/qemu/qemu_virtual_machine_factory.h"
 #include "logger/journald_logger.h"
 #include "shared/linux/process_factory.h"
+#include "shared/qemuimg_process_spec.h"
 #include "shared/sshfs_server_process_spec.h"
 #include <disabled_update_prompt.h>
 
@@ -124,6 +125,11 @@ mp::VirtualMachineFactory::UPtr mp::platform::vm_backend(const mp::Path& data_di
 std::unique_ptr<mp::Process> mp::platform::make_sshfs_server_process(const mp::SSHFSServerConfig& config)
 {
     return mp::ProcessFactory::instance().create_process(std::make_unique<mp::SSHFSServerProcessSpec>(config));
+}
+
+std::unique_ptr<mp::Process> mp::platform::make_qemuimg_process(const QStringList& parameters)
+{
+    return mp::ProcessFactory::instance().create_process(std::make_unique<mp::QemuImgProcessSpec>(parameters));
 }
 
 mp::UpdatePrompt::UPtr mp::platform::make_update_prompt()
