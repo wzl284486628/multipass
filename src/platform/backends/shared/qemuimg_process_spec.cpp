@@ -17,6 +17,8 @@
 
 #include "qemuimg_process_spec.h"
 
+#include <QString>
+#include <QStringList>
 #include <multipass/snap_utils.h>
 
 namespace mp = multipass;
